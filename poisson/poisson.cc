@@ -162,15 +162,27 @@ void Poisson<dim>::assemble_system()
     }
 
   std::map<types::global_dof_index, double> boundary_values;
-  int component = 0;
-  VectorTools::interpolate_boundary_values(dof_handler,
+
+  // interval has two boundary components, left and right end,
+  // while higher dimensional cubes only have one
+  std::vector<int> boundary_components;
+  if (dim == 1) {
+      boundary_components.push_back(0);
+      boundary_components.push_back(1);
+  } else {
+      boundary_components.push_back(0);
+  }
+    for(auto it = boundary_components.begin(); it != boundary_components.end(); ++it) {
+        int component = *it;
+        VectorTools::interpolate_boundary_values(dof_handler,
                                            component,
                                            ManufacturedPotential<dim>(),
                                            boundary_values);
-  MatrixTools::apply_boundary_values(boundary_values,
+        MatrixTools::apply_boundary_values(boundary_values,
                                      system_matrix,
                                      solution,
                                      system_rhs);
+    }
 }
 
 template <int dim>
