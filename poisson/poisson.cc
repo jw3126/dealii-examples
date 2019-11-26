@@ -37,7 +37,6 @@ private:
   void assemble_system();
   void solve();
   void process_solution();
-  void output_results() const;
 
   Triangulation<dim> triangulation;
   FE_Q<dim>          fe;
@@ -197,29 +196,6 @@ void Poisson<dim>::solve()
 }
 
 
-// @sect4{Poisson::output_results}
-
-template <int dim>
-void Poisson<dim>::output_results() const
-{
-  DataOut<dim> data_out;
-
-  data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(solution, "solution");
-
-  data_out.build_patches();
-  auto path = "solution.vtk";
-  if (dim == 1) {
-      path = "solution-1d.vtk";
-  } else if (dim == 2) {
-      path = "solution-2d.vtk";
-  } else {
-      path = "solution-3d.vtk";
-  }
-    std::ofstream output(path);
-    data_out.write_vtk(output);
-}
-
 template<int dim>
 void Poisson<dim>::process_solution() {
     Vector<float> difference_per_cell(triangulation.n_active_cells());
@@ -235,6 +211,26 @@ void Poisson<dim>::process_solution() {
                                     VectorTools::L2_norm);
 
     std::cout << "L2 error: " << L2_error << std::endl;
+
+    // output results
+    DataOut<dim> data_out;
+
+    data_out.attach_dof_handler(dof_handler);
+    data_out.add_data_vector(solution, "solution");
+
+    data_out.build_patches();
+    auto path = "solution.vtk";
+    if (dim == 1) {
+        path = "solution-1d.vtk";
+    } else if (dim == 2) {
+        path = "solution-2d.vtk";
+    } else {
+        path = "solution-3d.vtk";
+    }
+      std::ofstream output(path);
+      data_out.write_vtk(output);
+
+    Assert(L2_error < 1e-14, ExcInternalError());
 }
 
 template <int dim>
@@ -248,7 +244,6 @@ void Poisson<dim>::run()
   assemble_system();
   solve();
   process_solution();
-  output_results();
 }
 
 int main()
