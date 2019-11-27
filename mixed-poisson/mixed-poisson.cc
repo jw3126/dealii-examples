@@ -26,8 +26,6 @@
 #include <fstream>
 #include <iostream>
 #include <deal.II/fe/fe_raviart_thomas.h>
-// TODO get rid of tensors
-#include <deal.II/base/tensor_function.h>
 
 using namespace dealii;
 
@@ -154,7 +152,7 @@ template <int dim>
 void MixedPoisson<dim>::make_grid_and_dofs()
 {
   GridGenerator::hyper_cube(triangulation, -1, 1);
-  triangulation.refine_global(3);
+  triangulation.refine_global(4);
 
   dof_handler.distribute_dofs(fe);
 
@@ -353,20 +351,6 @@ void MixedPoisson<dim>::compute_errors() const
   ManufacturedSolution<dim> manufactured_solution;
   Vector<double>     cellwise_errors(triangulation.n_active_cells());
 
-  // As already discussed in step-7, we have to realize that it is
-  // impossible to integrate the errors exactly. All we can do is
-  // approximate this integral using quadrature. This actually presents a
-  // slight twist here: if we naively chose an object of type
-  // <code>QGauss@<dim@>(degree+1)</code> as one may be inclined to do (this
-  // is what we used for integrating the linear system), one realizes that
-  // the error is very small and does not follow the expected convergence
-  // curves at all. What is happening is that for the mixed finite elements
-  // used here, the Gauss points happen to be superconvergence points in
-  // which the pointwise error is much smaller (and converges with higher
-  // order) than anywhere else. These are therefore not particularly good
-  // points for integration. To avoid this problem, we simply use a
-  // trapezoidal rule and iterate it <code>degree+2</code> times in each
-  // coordinate direction (again as explained in step-7):
   QTrapez<1>     q_trapez;
   QIterated<dim> quadrature(q_trapez, degree + 2);
 
